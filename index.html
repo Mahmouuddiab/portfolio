@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mahmoud Diab — Flutter Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b1220;
+    --ink-2:#0f1a2e;
+    --paper:#f5f1e8;
+    --paper-dim:#e8e1d2;
+    --cyan:#06b6d4;
+    --cyan-deep:#0e7490;
+    --amber:#f59e0b;
+    --slate:#94a3b8;
+    --line:rgba(245,241,232,0.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+  }
+  .display{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;text-decoration:none;}
+
+  .sky-grid{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(6,182,212,0.06), transparent 40%),
+      radial-gradient(circle at 85% 75%, rgba(245,158,11,0.05), transparent 40%);
+  }
+
+  /* ---------- TITLE BAR / TABS ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:0 6vw;
+    background:rgba(11,18,32,0.9);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    height:60px;
+  }
+  .brand{display:flex;align-items:center;gap:0.9rem;flex-shrink:0;}
+  .dots{display:flex;gap:6px;}
+  .dots span{width:8px;height:8px;border-radius:50%;display:block;}
+  .dots span:nth-child(1){background:var(--cyan);}
+  .dots span:nth-child(2){background:var(--amber);}
+  .dots span:nth-child(3){background:var(--slate);}
+  .logo{font-weight:700;font-size:1rem;letter-spacing:0.02em;}
+  .logo span{color:var(--cyan);}
+
+  .navlinks{display:flex;height:100%;overflow-x:auto;scrollbar-width:none;}
+  .navlinks::-webkit-scrollbar{display:none;}
+  .navlinks a{
+    position:relative;display:flex;align-items:center;gap:0.5rem;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;letter-spacing:0.01em;
+    color:var(--slate);transition:color .2s, background .2s;
+    padding:0 1rem;white-space:nowrap;height:100%;
+    border-right:1px solid var(--line);
+  }
+  .navlinks a::before{
+    content:'';width:7px;height:7px;border-radius:2px;flex-shrink:0;
+  }
+  .navlinks a[data-ext="dart"]::before{background:var(--cyan);}
+  .navlinks a[data-ext="yaml"]::before{background:var(--amber);}
+  .navlinks a[data-ext="md"]::before{background:var(--slate);}
+  .navlinks a:hover{color:var(--paper);background:rgba(245,241,232,0.03);}
+  .navlinks a.active{color:var(--paper);background:rgba(6,182,212,0.07);}
+  .navlinks a.active::after{
+    content:'';position:absolute;left:0;bottom:0;width:100%;height:2px;background:var(--cyan);
+  }
+  .navlinks a:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px;}
+
+  .navtoast{
+    position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);
+    background:var(--ink-2);color:var(--paper);font-family:'IBM Plex Mono',monospace;border:1px solid var(--line);
+    font-size:0.7rem;letter-spacing:0.03em;padding:0.5rem 1rem;border-radius:6px;
+    z-index:60;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  .navtoast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .navtoast b{color:var(--cyan);}
+
+  section{position:relative;z-index:1;padding:7vw 6vw;}
+
+  /* ---------- SECTION HEADERS ---------- */
+  .sec-head{display:flex;flex-direction:column;gap:0.3rem;margin-bottom:3rem;}
+  .sec-path{font-family:'IBM Plex Mono',monospace;color:var(--cyan);font-size:0.78rem;}
+  .sec-path span{color:var(--slate);}
+  .sec-title{font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:700;font-family:'Space Grotesk',sans-serif;margin-top:0.3rem;}
+  .sec-sub{color:var(--slate);max-width:560px;font-size:0.98rem;margin-top:0.6rem;line-height:1.6;}
+
+  /* ---------- HERO: main.dart editor window ---------- */
+  .hero{
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding-top:14vh;
+  }
+  .editor{
+    max-width:920px;width:100%;
+    background:var(--paper);color:var(--ink);
+    border-radius:14px;
+    box-shadow:0 40px 90px rgba(0,0,0,0.45);
+    overflow:hidden;
+    animation:editIn 0.9s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes editIn{from{opacity:0;transform:translateY(24px) scale(.98);}to{opacity:1;transform:none;}}
+  .editor-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0.7rem 1.4rem;background:var(--paper-dim);border-bottom:1px solid #d9d0bb;
+  }
+  .editor-bar .file{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;color:#475569;display:flex;align-items:center;gap:0.5rem;}
+  .editor-bar .file::before{content:'';width:7px;height:7px;border-radius:2px;background:var(--cyan-deep);}
+  .editor-bar .status{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--cyan-deep);display:flex;align-items:center;gap:0.4rem;}
+  .editor-bar .status i{width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block;}
+
+  .code-panel{padding:2.2rem 1.6rem;counter-reset:line;}
+  .cl{counter-increment:line;display:flex;gap:1.2rem;font-family:'IBM Plex Mono',monospace;font-size:0.92rem;line-height:1.85;}
+  .cl .ln{width:1.4rem;text-align:right;color:#b7ad98;user-select:none;flex-shrink:0;}
+  .cl .ln::before{content:counter(line);}
+  .cl .src{white-space:pre-wrap;}
+  .kw{color:var(--cyan-deep);font-weight:600;}
+  .cls{color:var(--ink);font-weight:700;}
+  .str{color:#0e7490;}
+  .cmt{color:#94897a;font-style:italic;}
+  .prop{color:#334155;}
+
+  .cta-row{display:flex;gap:1rem;margin-top:1.6rem;flex-wrap:wrap;padding:0 1.6rem 2rem;}
+  .btn{
+    padding:0.8rem 1.5rem;border-radius:8px;font-size:0.82rem;font-weight:600;font-family:'IBM Plex Mono',monospace;
+    letter-spacing:0.01em;display:inline-flex;align-items:center;gap:0.5rem;
+    transition:transform .2s, box-shadow .2s;border:1px solid transparent;
+  }
+  .btn-solid{background:var(--ink);color:var(--paper);}
+  .btn-solid:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.3);}
+  .btn-outline{border-color:#475569;color:var(--ink);}
+  .btn-outline:hover{border-color:var(--ink);transform:translateY(-2px);}
+
+  /* ---------- SKILLS: pubspec.yaml ---------- */
+  .board{
+    background:var(--ink-2);border:1px solid var(--line);border-radius:14px;
+    padding:0.5rem;overflow:hidden;
+  }
+  .board-row{
+    display:grid;grid-template-columns:1fr 150px 100px;
+    align-items:center;gap:1rem;
+    padding:1.05rem 1.4rem;border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;font-size:0.85rem;
+  }
+  .board-row:last-child{border-bottom:none;}
+  .board-row .pkg{color:var(--paper);}
+  .board-row .pkg .ver{color:var(--amber);}
+  .board-row .pkg .cmt2{display:block;color:var(--slate);font-size:0.72rem;margin-top:2px;font-family:'Inter',sans-serif;}
+  .board-row .prog{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+  .board-row .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan-deep));}
+  .board-row .channel{text-align:right;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;}
+  .board-row .channel.stable{color:var(--cyan);}
+  .board-row .channel.beta{color:var(--amber);}
+  .board-head{display:grid;grid-template-columns:1fr 150px 100px;gap:1rem;padding:0.8rem 1.4rem;font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--slate);}
+
+  /* ---------- EXPERIENCE: CHANGELOG.md as git log ---------- */
+  .gitlog{border-left:2px solid var(--line);padding-left:1.8rem;display:flex;flex-direction:column;gap:2.2rem;max-width:780px;}
+  .gitlog .commit{position:relative;}
+  .gitlog .commit::before{content:'';position:absolute;left:-2.28rem;top:5px;width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 4px rgba(6,182,212,0.15);}
+  .commit-meta{font-family:'IBM Plex Mono',monospace;font-size:0.76rem;color:var(--amber);letter-spacing:0.02em;}
+  .commit-meta .range{color:var(--slate);margin-left:0.6rem;}
+  .commit h4{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;margin:0.4rem 0 0.15rem;}
+  .commit h4 em{font-style:normal;font-weight:400;color:var(--slate);font-size:0.95rem;}
+  .commit .job-sub{color:var(--cyan);font-size:0.8rem;font-family:'IBM Plex Mono',monospace;margin-bottom:0.7rem;letter-spacing:0.02em;}
+  .commit ul{list-style:none;display:flex;flex-direction:column;gap:0.45rem;margin-top:0.2rem;}
+  .commit ul li{color:var(--slate);font-size:0.9rem;line-height:1.55;padding-left:1.1rem;position:relative;}
+  .commit ul li::before{content:'+';color:var(--cyan);position:absolute;left:0;font-weight:700;}
+
+  /* ---------- PROJECTS: lib/projects/ file cards ---------- */
+  .tags{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.6rem;}
+  .tag{
+    background:var(--paper);color:var(--ink);border-radius:12px;padding:1.8rem;
+    position:relative;transition:transform .3s, box-shadow .3s;
+    border:1px solid var(--paper-dim);
+  }
+  .tag:hover{transform:translateY(-6px);box-shadow:0 24px 50px rgba(0,0,0,0.35);}
+  .tag-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.1rem;gap:0.6rem;}
+  .tag-path{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;background:var(--ink);color:var(--cyan);padding:4px 9px;border-radius:5px;letter-spacing:0.01em;}
+  .tag-flag{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan-deep);font-weight:700;white-space:nowrap;}
+  .tag h3{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;margin-bottom:0.6rem;}
+  .tag p{font-size:0.88rem;color:#475569;line-height:1.6;margin-bottom:1.1rem;}
+  .tag-stack{display:flex;flex-wrap:wrap;gap:6px;}
+  .tag-stack span{font-size:0.68rem;font-family:'IBM Plex Mono',monospace;background:#eae4d6;padding:3px 8px;border-radius:5px;color:#334155;}
+
+  .strip{display:flex;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;}
+  .strip a{
+    font-family:'IBM Plex Mono',monospace;font-size:0.78rem;
+    border:1px solid var(--line);padding:0.6rem 1rem;border-radius:8px;
+    color:var(--slate);transition:.2s;
+  }
+  .strip a:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  /* ---------- ABOUT: README.md ---------- */
+  .about-wrap{display:grid;grid-template-columns:0.9fr 1.1fr;gap:4rem;align-items:start;}
+  .about-wrap p{color:var(--slate);line-height:1.85;font-size:1rem;margin-bottom:1.2rem;}
+  .about-wrap strong{color:var(--paper);}
+  .md-h{font-family:'IBM Plex Mono',monospace;color:var(--slate);font-size:0.8rem;margin-bottom:0.4rem;}
+  .md-h b{color:var(--cyan);}
+
+  .runway{border-left:2px solid var(--line);padding-left:1.8rem;display:flex;flex-direction:column;gap:2rem;}
+  .runway .pt{position:relative;}
+  .runway .pt::before{content:'';position:absolute;left:-2.28rem;top:4px;width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 4px rgba(6,182,212,0.15);}
+  .runway .yr{font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:0.72rem;letter-spacing:0.08em;}
+  .runway h4{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;margin:0.3rem 0;}
+  .runway p{color:var(--slate);font-size:0.9rem;line-height:1.6;}
+
+  @media (max-width:820px){
+    .about-wrap{grid-template-columns:1fr;gap:2.4rem;}
+  }
+
+  /* ---------- CREDENTIALS: config.yaml ---------- */
+  .cred-grid{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:1.6rem;align-items:stretch;}
+  .cred-card{
+    background:var(--ink-2);border:1px solid var(--line);border-radius:14px;
+    padding:1.9rem;display:flex;flex-direction:column;
+  }
+  .cred-label{
+    font-size:0.65rem;letter-spacing:0.1em;color:var(--cyan);
+    font-weight:700;margin-bottom:1.1rem;font-family:'IBM Plex Mono',monospace;
+  }
+  .cred-label::before{content:'# ';color:var(--slate);}
+  .cred-card h4{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;line-height:1.4;margin-bottom:0.4rem;}
+  .cred-sub{color:var(--slate);font-size:0.84rem;margin-bottom:0.3rem;}
+  .cred-date{color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.74rem;margin-top:auto;padding-top:1rem;}
+  .cred-list{list-style:none;display:flex;flex-direction:column;gap:0.85rem;}
+  .cred-list li{font-size:0.86rem;color:var(--paper);display:flex;align-items:flex-start;gap:0.6rem;line-height:1.4;font-family:'IBM Plex Mono',monospace;}
+  .cred-list li::before{content:'-';color:var(--cyan);font-weight:700;flex-shrink:0;}
+  .lang-row{margin-bottom:1.3rem;}
+  .lang-row:last-child{margin-bottom:0;}
+  .lang-top{display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:0.5rem;font-family:'IBM Plex Mono',monospace;}
+  .lang-top .lvl{color:var(--slate);font-size:0.68rem;}
+  .lang-bar{height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+  .lang-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan-deep));}
+
+  @media (max-width:900px){
+    .cred-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------- CONTACT: contact.dart terminal ---------- */
+  footer{padding:6vw;}
+  .stub{
+    max-width:820px;margin:0 auto;
+    background:var(--paper);color:var(--ink);border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 30px 70px rgba(0,0,0,0.4);
+  }
+  .stub .editor-bar{background:var(--paper-dim);}
+  .stub-body{padding:2.2rem 1.8rem;}
+  .stub-body .out{font-family:'IBM Plex Mono',monospace;font-size:0.88rem;line-height:2;color:#334155;}
+  .stub-body .out .ok{color:#16a34a;font-weight:700;margin-right:0.6rem;}
+  .stub-body .out .k{color:#475569;}
+  .stub-body .out a{color:var(--cyan-deep);font-weight:600;}
+  .stub-body .out a:hover{text-decoration:underline;}
+  .stub-body h3{font-family:'Space Grotesk',sans-serif;font-size:1.7rem;margin:0.2rem 0 1.2rem;}
+  .fine{text-align:center;color:var(--slate);font-size:0.78rem;margin-top:2.5rem;font-family:'IBM Plex Mono',monospace;}
+
+  @media (max-width:720px){
+    .cl{font-size:0.8rem;gap:0.8rem;}
+    .board-row, .board-head{grid-template-columns:1fr 90px;}
+    .board-row .prog{display:none;}
+    .board-head span:nth-child(2){display:none;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .editor{animation:none;}
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="sky-grid"></div>
+
+<nav>
+  <div class="brand">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="logo">MAHMOUD<span>.DEV</span></div>
+  </div>
+  <div class="navlinks" id="navlinks">
+    <a href="#top" data-nav="top" data-ext="dart">main.dart</a>
+    <a href="#skills" data-nav="skills" data-ext="yaml">pubspec.yaml</a>
+    <a href="#experience" data-nav="experience" data-ext="md">CHANGELOG.md</a>
+    <a href="#projects" data-nav="projects" data-ext="dart">projects/</a>
+    <a href="#about" data-nav="about" data-ext="md">README.md</a>
+    <a href="#credentials" data-nav="credentials" data-ext="yaml">config.yaml</a>
+    <a href="#contact" data-nav="contact" data-ext="dart">contact.dart</a>
+  </div>
+</nav>
+<div class="navtoast" id="navtoast"></div>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="editor">
+    <div class="editor-bar">
+      <span class="file">lib/main.dart</span>
+      <span class="status"><i></i>build passing</span>
+    </div>
+    <div class="code-panel">
+      <div class="cl"><span class="ln"></span><span class="src src cmt">// lib/main.dart</span></div>
+      <div class="cl"><span class="ln"></span><span class="src"><span class="kw">class</span> <span class="cls">MahmoudDiab</span> <span class="kw">extends</span> <span class="cls">FlutterDeveloper</span> {</span></div>
+      <div class="cl"><span class="ln"></span><span class="src">&nbsp;&nbsp;<span class="kw">final</span> <span class="prop">role</span> = <span class="str">'Flutter Developer &amp; Mobile Engineer'</span>;</span></div>
+      <div class="cl"><span class="ln"></span><span class="src">&nbsp;&nbsp;<span class="kw">final</span> <span class="prop">base</span> = <span class="str">'Dammam, Saudi Arabia'</span>;</span></div>
+      <div class="cl"><span class="ln"></span><span class="src">&nbsp;&nbsp;<span class="kw">final</span> <span class="prop">experience</span> = <span class="str">'4+ years'</span>;</span></div>
+      <div class="cl"><span class="ln"></span><span class="src">&nbsp;&nbsp;<span class="kw">final</span> <span class="prop">stack</span> = [<span class="str">'Flutter'</span>, <span class="str">'Firebase'</span>, <span class="str">'Riverpod'</span>];</span></div>
+      <div class="cl"><span class="ln"></span><span class="src">&nbsp;&nbsp;<span class="kw">final</span> <span class="prop">status</span> = <span class="cls">Status</span>.<span class="prop">openToWork</span>;</span></div>
+      <div class="cl"><span class="ln"></span><span class="src">}</span></div>
+    </div>
+    <div class="cta-row">
+      <a href="#projects" class="btn btn-solid">$ open projects/</a>
+      <a href="https://github.com/Mahmouuddiab" target="_blank" rel="noopener" class="btn btn-outline">$ open github</a>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="sec-head">
+    <span class="sec-path mono"><span>~/</span>pubspec.yaml</span>
+    <div class="sec-title">Dependencies — Technical Skills</div>
+    <div class="sec-sub">The stack every build pulls in, grouped by role.</div>
+  </div>
+
+  <div class="board">
+    <div class="board-head">
+      <span>dependency</span><span>confidence</span><span>channel</span>
+    </div>
+
+    <div class="board-row">
+      <span class="pkg">languages<span class="cmt2">Dart · C++ · HTML · CSS</span></span>
+      <span class="prog"><i style="width:95%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">state_management<span class="cmt2">Riverpod · Bloc · Cubit</span></span>
+      <span class="prog"><i style="width:94%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">cloud_services<span class="cmt2">Firebase &amp; Supabase</span></span>
+      <span class="prog"><i style="width:93%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">architecture<span class="cmt2">Clean Architecture · MVVM · MVC</span></span>
+      <span class="prog"><i style="width:90%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">networking<span class="cmt2">Http · Dio · Retrofit</span></span>
+      <span class="prog"><i style="width:88%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">navigation_di<span class="cmt2">GoRouter, Navigator, GetIt &amp; Injectable</span></span>
+      <span class="prog"><i style="width:86%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">local_storage<span class="cmt2">Hive · Shared Preferences</span></span>
+      <span class="prog"><i style="width:82%"></i></span>
+      <span class="channel beta">beta</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">design_patterns<span class="cmt2">Singleton · Repository · Observer</span></span>
+      <span class="prog"><i style="width:85%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">l10n_theming<span class="cmt2">Localization, Theming &amp; Responsive/Adaptive UI</span></span>
+      <span class="prog"><i style="width:90%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">integrations<span class="cmt2">Payment Gateways · Push Notifications · Google Maps</span></span>
+      <span class="prog"><i style="width:87%"></i></span>
+      <span class="channel stable">stable</span>
+    </div>
+    <div class="board-row">
+      <span class="pkg">release_tooling<span class="cmt2">Git &amp; GitHub · App Store &amp; Google Play Distribution</span></span>
+      <span class="prog"><i style="width:84%"></i></span>
+      <span class="channel beta">beta</span>
+    </div>
+  </div>
+</section>
+
+<!-- WORK EXPERIENCE -->
+<section id="experience">
+  <div class="sec-head">
+    <span class="sec-path mono"><span>~/</span>CHANGELOG.md</span>
+    <div class="sec-title">Version History — Work Experience</div>
+    <div class="sec-sub">Releases shipped, most recent first.</div>
+  </div>
+
+  <div class="gitlog">
+    <div class="commit">
+      <div class="commit-meta">v3.0.0 <span class="range">11/2025 – Present · Dammam</span></div>
+      <h4>Flutter Developer <em>— Massam Alkhaleej</em></h4>
+      <div class="job-sub">Tall3at App — B2B Travel Marketplace Platform</div>
+      <ul>
+        <li>Developed and launched a Flutter-based B2B travel marketplace connecting travelers with trip providers across major cities in Saudi Arabia.</li>
+        <li>Designed and implemented a dual-role ecosystem (Customers &amp; Service Providers), enabling trip discovery, booking management, and service publishing.</li>
+        <li>Built a secure end-to-end booking workflow, including payment integration, booking confirmation, and real-time status updates.</li>
+        <li>Optimized user experience through scalable architecture, responsive UI, and seamless cross-platform performance.</li>
+        <li>Successfully deployed, maintained, and supported the application on both Google Play Store and Apple App Store.</li>
+      </ul>
+    </div>
+
+    <div class="commit">
+      <div class="commit-meta">v2.0.0 <span class="range">01/2025 – 11/2025 · Giza</span></div>
+      <h4>Flutter Developer <em>— Dr Coding</em></h4>
+      <div class="job-sub">Balance Labs Mobile Application</div>
+      <ul>
+        <li>Developed a Flutter-based healthcare application for one of Jeddah's leading medical laboratories, serving thousands of patients.</li>
+        <li>Implemented appointment booking, test reservations, secure medical report delivery, and offers management.</li>
+        <li>Integrated RESTful APIs and optimized performance to deliver a seamless experience across Android and iOS platforms.</li>
+      </ul>
+    </div>
+
+    <div class="commit">
+      <div class="commit-meta">v1.0.0 <span class="range">02/2024 – 01/2025 · Cairo</span></div>
+      <h4>Flutter Developer <em>— Plaxpert (Startup, Full-time, On-site)</em></h4>
+      <ul>
+        <li>Led the tech side of multiple products using Flutter and Supabase.</li>
+        <li>Built scalable apps and backend systems with clean architecture.</li>
+        <li>Handled UI/UX, backend setup, and deployment end-to-end.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="sec-head">
+    <span class="sec-path mono"><span>~/lib/</span>projects/</span>
+    <div class="sec-title">Project Files — Selected Work</div>
+    <div class="sec-sub">Apps built and shipped. Each file names the stack behind it.</div>
+  </div>
+
+  <div class="tags">
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">Flagship</span>
+        <span class="tag-path">tall3at_app.dart</span>
+      </div>
+      <h3>Tall3at App</h3>
+      <p>A B2B travel marketplace platform with end-to-end booking workflows, secure payment integration, trip management, and real-time updates — enabling travel agencies, tour operators, and activity providers to reach a larger audience and manage reservations from a centralized platform. Published on Google Play and the App Store.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>Clean Architecture</span><span>Payments</span><span>Firebase</span>
+      </div>
+    </div>
+
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">Commerce</span>
+        <span class="tag-path">flowery.dart</span>
+      </div>
+      <h3>Flowery</h3>
+      <p>A modern eCommerce application for buying and selling flowers, designed with Clean Architecture and scalable state management. Users browse a variety of flowers, add items to the cart, and complete purchases through a smooth, intuitive shopping experience.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>Clean Architecture</span><span>Cart &amp; Checkout</span>
+      </div>
+    </div>
+
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">Healthcare</span>
+        <span class="tag-path">balance_labs.dart</span>
+      </div>
+      <h3>Balance Labs</h3>
+      <p>A Flutter app built for a leading medical lab in Jeddah, serving thousands of patients. Delivers booking, test reservation, and secure medical result delivery, plus offers management — published on Google Play and the App Store with a fast, reliable cross-platform experience.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>REST APIs</span><span>Secure Delivery</span>
+      </div>
+    </div>
+
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">Interview Tech</span>
+        <span class="tag-path">mock_meet.dart</span>
+      </div>
+      <h3>Mock Meet</h3>
+      <p>An interview simulation platform with live Zoom sessions, in-app wallet payments, a specialization-based scenario engine, and push notification scheduling. Ships as a dual-app experience for candidates and trainers, available on the App Store and Google Play.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>Zoom SDK</span><span>Wallet Payments</span><span>Push Notifications</span>
+      </div>
+    </div>
+
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">PropTech</span>
+        <span class="tag-path">hapispace.dart</span>
+      </div>
+      <h3>HapiSpace</h3>
+      <p>A real estate application built with Clean Architecture and BLoC/Cubit state management. Users discover, search, filter, and explore properties, manage favorite listings, view locations on Google Maps, make secure payments, and maintain their profiles.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>BLoC/Cubit</span><span>Google Maps</span><span>Payments</span>
+      </div>
+    </div>
+
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">Commerce</span>
+        <span class="tag-path">marketi.dart</span>
+      </div>
+      <h3>Marketi</h3>
+      <p>A full-featured eCommerce app with multiple product categories — browsing, search, filtering, cart, wishlist, secure checkout, and order tracking. Built with Clean Architecture and scalable state management for high performance on Android and iOS.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>Clean Architecture</span><span>Order Tracking</span>
+      </div>
+    </div>
+
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">AI / Chat</span>
+        <span class="tag-path">chat_bot.dart</span>
+      </div>
+      <h3>Chat-Bot</h3>
+      <p>A smart chatbot application enabling real-time conversation with users — quick responses, assistance, and interactive support, delivered through a clean, scalable architecture with a smooth messaging experience across Android and iOS.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>Real-Time Messaging</span>
+      </div>
+    </div>
+
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">AI</span>
+        <span class="tag-path">meal_recommender.dart</span>
+      </div>
+      <h3>Recommended Meal App</h3>
+      <p>An AI-powered meal recommendation app using Flutter and Gemini AI. Analyzes user-provided ingredients and generates personalized healthy meal suggestions, calculating calories, protein, and nutritional values. Built with Clean Architecture and Supabase.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>Gemini AI</span><span>Supabase</span><span>Clean Architecture</span>
+      </div>
+    </div>
+
+    <div class="tag">
+      <div class="tag-top">
+        <span class="tag-flag">Reading</span>
+        <span class="tag-path">bookly.dart</span>
+      </div>
+      <h3>Bookly</h3>
+      <p>A book discovery application with search, recommendations, and detailed book information. Integrated REST APIs and scalable state management to deliver a responsive cross-platform experience for Android and iOS users.</p>
+      <div class="tag-stack">
+        <span>Flutter</span><span>REST APIs</span><span>State Management</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <a href="https://github.com/Mahmouuddiab/hungry-app" target="_blank" rel="noopener">↳ hungry-app</a>
+    <a href="https://github.com/Mahmouuddiab/movies_hub" target="_blank" rel="noopener">↳ movies_hub</a>
+    <a href="https://github.com/Mahmouuddiab/flowery" target="_blank" rel="noopener">↳ flowery</a>
+    <a href="https://github.com/Mahmouuddiab/google-maps1" target="_blank" rel="noopener">↳ google-maps1</a>
+    <a href="https://github.com/Mahmouuddiab/chat" target="_blank" rel="noopener">↳ chat</a>
+    <a href="https://github.com/Mahmouuddiab?tab=repositories" target="_blank" rel="noopener">View all 32 repos →</a>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="sec-head">
+    <span class="sec-path mono"><span>~/</span>README.md</span>
+    <div class="sec-title">About</div>
+    <div class="sec-sub">Where the work has taken shape.</div>
+  </div>
+
+  <div class="about-wrap">
+    <div>
+      <div class="md-h"># <b>Overview</b></div>
+      <p><strong>Mahmoud Diab</strong> is a Flutter developer and mobile engineer with 4+ years of experience across Egypt and Saudi Arabia, building clean, scalable, and high-performance mobile applications end to end — from architecture down to the pixel.</p>
+      <p>Most days are spent inside <strong>Clean Architecture</strong>, wiring up state with <strong>Riverpod, Bloc, and Cubit</strong>, and getting <strong>Firebase</strong> and <strong>Supabase</strong> to behave in production, not just in the emulator. Recent focus has shifted toward shipping infrastructure: CI/CD pipelines, notification lifecycles, and the small, unglamorous bugs that decide whether an app actually feels reliable.</p>
+      <p>Comfortable working across Arabic and English, RTL and LTR, and just as comfortable debugging a state provider at midnight as sketching a new onboarding illustration for the next release.</p>
+    </div>
+    <div class="runway">
+      <div class="pt">
+        <div class="yr">CORE</div>
+        <h4>Clean Architecture &amp; State Management</h4>
+        <p>Cubit/BLoC, Provider, and Riverpod, applied with SOLID principles across production codebases.</p>
+      </div>
+      <div class="pt">
+        <div class="yr">SHIP</div>
+        <h4>Firebase &amp; Supabase-Backed Systems</h4>
+        <p>Auth, Firestore, FCM, Storage, and Cloud Functions wired into real-time chat, notifications, bookings, and search.</p>
+      </div>
+      <div class="pt">
+        <div class="yr">SCALE</div>
+        <h4>CI/CD &amp; Release Infrastructure</h4>
+        <p>GitHub Actions pipelines — test, build, deploy — with Firebase App Distribution for QA builds.</p>
+      </div>
+      <div class="pt">
+        <div class="yr">NEXT</div>
+        <h4>AI-Integrated Mobile Experiences</h4>
+        <p>Shipping Gemini AI integrations for recommendation features, with more AI-driven experiences in the pipeline.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CREDENTIALS -->
+<section id="credentials">
+  <div class="sec-head">
+    <span class="sec-path mono"><span>~/</span>config.yaml</span>
+    <div class="sec-title">Credentials</div>
+    <div class="sec-sub">Education, training, and languages configured for the journey.</div>
+  </div>
+
+  <div class="cred-grid">
+    <div class="cred-card">
+      <div class="cred-label">education</div>
+      <h4>Faculty of Computer Science &amp; Artificial Intelligence</h4>
+      <div class="cred-sub">October 6 University — Egypt</div>
+      <div class="cred-date">09/2019 – 05/2023</div>
+    </div>
+
+    <div class="cred-card">
+      <div class="cred-label">certificates_and_internships</div>
+      <ul class="cred-list">
+        <li>Flutter Internship at Route</li>
+        <li>Digital Egypt Pioneers Internship</li>
+        <li>Cellula Technologies Internship</li>
+        <li>Flutter Internship at Instant</li>
+      </ul>
+    </div>
+
+    <div class="cred-card">
+      <div class="cred-label">languages</div>
+      <div class="lang-row">
+        <div class="lang-top"><span>arabic</span><span class="lvl">native</span></div>
+        <div class="lang-bar"><i style="width:100%"></i></div>
+      </div>
+      <div class="lang-row">
+        <div class="lang-top"><span>english</span><span class="lvl">very good</span></div>
+        <div class="lang-bar"><i style="width:85%"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<footer id="contact">
+  <div class="stub">
+    <div class="editor-bar">
+      <span class="file">contact.dart</span>
+      <span class="status"><i></i>ready</span>
+    </div>
+    <div class="stub-body">
+      <h3 class="display">Let's build the next app.</h3>
+      <div class="out mono">
+        <div><span class="k">&gt;</span> flutter run --target contact</div>
+        <div><span class="ok">✓</span><span class="k">email&nbsp;&nbsp;&nbsp;</span> <a href="mailto:diabmahmoud450@gmail.com">diabmahmoud450@gmail.com</a></div>
+        <div><span class="ok">✓</span><span class="k">phone&nbsp;&nbsp;&nbsp;</span> <a href="tel:+966500821148">+966 50 082 1148</a></div>
+        <div><span class="ok">✓</span><span class="k">linkedin</span> <a href="https://linkedin.com/in/mahmoud-diab" target="_blank" rel="noopener">/in/mahmoud-diab</a></div>
+        <div><span class="ok">✓</span><span class="k">github&nbsp;&nbsp;</span> <a href="https://github.com/Mahmouuddiab" target="_blank" rel="noopener">@Mahmouuddiab</a></div>
+        <div><span class="ok">✓</span><span class="k">based in</span> Dammam, KSA</div>
+      </div>
+    </div>
+  </div>
+  <div class="fine">© 2026 MAHMOUD DIAB — FLUTTER DEVELOPER — BUILD PASSING</div>
+</footer>
+
+<script>
+  const navLinks = document.querySelectorAll('.navlinks a');
+  const toast = document.getElementById('navtoast');
+  let toastTimer;
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetId = link.getAttribute('href').slice(1);
+      const targetEl = document.getElementById(targetId);
+      if(!targetEl) return;
+
+      const navHeight = document.querySelector('nav').offsetHeight;
+      const top = targetEl.getBoundingClientRect().top + window.scrollY - navHeight - 8;
+      window.scrollTo({ top, behavior: 'smooth' });
+
+      toast.innerHTML = 'Opened <b>' + link.textContent + '</b>';
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 1400);
+
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      history.pushState(null, '', '#' + targetId);
+    });
+  });
+
+  const sections = ['top','skills','experience','projects','about','credentials','contact']
+    .map(id => document.getElementById(id)).filter(Boolean);
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const id = entry.target.id;
+        navLinks.forEach(l => l.classList.toggle('active', l.dataset.nav === id));
+      }
+    });
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+  sections.forEach(sec => spy.observe(sec));
+</script>
+
+</body>
+</html>
